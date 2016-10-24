@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode: nil -*-
 # vi: set ft=python sts=4 ts=4 sw=4 et:
 '''
@@ -165,7 +166,7 @@ def choose(opts, target=None):
         choice = int(raw_input('\nInput number\n'))
     return opts[choice-1]
 
-def makebids(data_dir, subjpre, dicom_dir=None, session=None, taskname=None, no_test=False):
+def main(data_dir, subjpre, dicom_dir=None, session=None, taskname=None, no_test=False):
     choice = int(raw_input('''
 Pick one option:
 1. Add sub prefix
@@ -214,9 +215,9 @@ if __name__ == '__main__':
     no_test = args.notest
     if no_test is None:
         no_test = False
-    makebids(data_dir=os.path.abspath(args.datadir),
-             subjpre=args.pre,
-             dicom_dir=args.dicoms,
-             session=args.session, taskname=args.taskname,
-             no_test=no_test)
+    main(data_dir=os.path.abspath(args.datadir),
+         subjpre=args.pre,
+         dicom_dir=args.dicoms,
+         session=args.session, taskname=args.taskname,
+         no_test=no_test)
 
