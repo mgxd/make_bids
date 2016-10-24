@@ -13,7 +13,7 @@ setup(name='makebids',
       author_email='mathiasg@mit.edu',
       packages=['makebids'],
       install_requires = ['pydicom',
-                          'pybids'],
-      dependency_links=['https://github.com/INCF/pybids/tree/master/bids#egg'],
+                          'pybids>=0.1.dev0'],
+      dependency_links=['https://github.com/INCF/pybids/tarball/master/bids#egg=pybids-0.1.dev0'],
       entry_points={'console_scripts': 
                  ['makebids=makebids.makebids:main']})
