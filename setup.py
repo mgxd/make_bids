@@ -11,7 +11,7 @@ setup(name='makebids',
       url='https://github.com/mgxd/make_bids',
       author='Mathias Goncalves',
       author_email='mathiasg@mit.edu',
-      package_dir{'':'bin'},
+      package_dir={'':'bin'},
       packages=['makebids'],
       install_requires = ['pydicom'],
       entry_points={'console_scripts': 
