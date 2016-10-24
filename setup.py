@@ -8,11 +8,10 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 setup(name='makebids',
       version='dev',
-      url='https://github.com/mgxd/make_bids',
+      url='https://github.com/mgxd/makebids',
       author='Mathias Goncalves',
       author_email='mathiasg@mit.edu',
-      package_dir={'':'bin'},
       packages=['makebids'],
       install_requires = ['pydicom'],
       entry_points={'console_scripts': 
-                 ['makebids=bin.makebids:main']})
+                 ['makebids=makebids.makebids:main']})
