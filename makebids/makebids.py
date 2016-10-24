@@ -166,38 +166,7 @@ def choose(opts, target=None):
         choice = int(raw_input('\nInput number\n'))
     return opts[choice-1]
 
-def main(data_dir, subjpre, dicom_dir=None, session=None, taskname=None, no_test=False):
-    choice = int(raw_input('''
-Pick one option:
-1. Add sub prefix
-2. Remove underscore
-3. Make subject scan files
-4. Add taskname to json
-5. Add IntendedFor / Readout
-'''))
-    if choice == 1:
-        add_sub(data_dir, subjpre, session, no_test)
-    elif choice == 2:
-        undscr = int(raw_input('''How many underscores in your subject?\n'''))
-        drop_underscore(data_dir, subjpre, no_test, undscr)
-    elif choice == 3:
-        try:
-            import dicom
-        except ImportError:
-            print('You need to have pydicom installed (pip install pydicom)')
-            sys.exit(-1)
-        if not dicom_dir:
-            print('Specify dicom directory with [-d] flag')
-            sys.exit(-1)
-        write_scantsv(data_dir, dicom_dir, subjpre, no_test)
-    elif choice == 4:
-        add_taskname(data_dir, taskname, no_test)
-    elif choice == 5:
-        fix_fieldmaps(data_dir, no_test)
-    else:
-        sys.exit(-1)
-        
-if __name__ == '__main__':
+def main():
     import argparse
     defstr = ' (default %(default)s)'
     parser = argparse.ArgumentParser(prog='make_bids.py')
@@ -210,14 +179,41 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.dicoms:
         import dicom
-    if args.dicoms:
-        args.dicoms = os.path.abspath(args.dicoms)
+        dicom_dir = os.path.abspath(args.dicoms)
     no_test = args.notest
     if no_test is None:
         no_test = False
-    main(data_dir=os.path.abspath(args.datadir),
-         subjpre=args.pre,
-         dicom_dir=args.dicoms,
-         session=args.session, taskname=args.taskname,
-         no_test=no_test)
 
+    data_dir = os.path.abspath(args.datadir)
+    if not os.path.exists(data_dir):
+        print('Data directory not found')
+        sys.exit(-1)
+
+    choice = int(raw_input('''
+Pick one option:
+1. Add sub prefix
+2. Remove underscore
+3. Make subject scan files
+4. Add taskname to json
+5. Add IntendedFor / Readout
+'''))
+    if choice == 1:
+        add_sub(data_dir, args.pre, args.session, no_test)
+    elif choice == 2:
+        undscr = int(raw_input('''How many underscores in your subject?\n'''))
+        drop_underscore(data_dir, args.pre, no_test, undscr)
+    elif choice == 3:
+        if args.dicom_dir:
+            write_scantsv(data_dir, dicom_dir, args.pre, no_test)
+        else:
+            print('Specify dicom directory with [-d] flag')
+            sys.exit(-1)
+    elif choice == 4:
+        add_taskname(data_dir, args.taskname, no_test)
+    elif choice == 5:
+        fix_fieldmaps(data_dir, no_test)
+    else:
+        sys.exit(-1)
+        
+if __name__ == '__main__':
+    main()
