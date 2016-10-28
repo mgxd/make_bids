@@ -167,9 +167,17 @@ def choose(opts, target=None):
     return opts[choice-1]
 
 def main():
+
+    class MyParser(argparse.ArgumentParser):
+        def error(self, message):
+            sys.stderr.write('error: %s\n' % message)
+            self.print_help()
+            sys.exit(2)
+
     import argparse
     defstr = ' (default %(default)s)'
-    parser = argparse.ArgumentParser(prog='make_bids.py')
+    parser = argparse.ArgumentParser(prog='make_bids.py',
+                                     description=__doc__)
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
