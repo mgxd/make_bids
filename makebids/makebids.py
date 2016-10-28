@@ -169,7 +169,7 @@ def choose(opts, target=None):
 def main():
     import argparse
     defstr = ' (default %(default)s)'
-    parser = argparse.ArgumentParser(prog='make_bids.py')
+    parser = argparse.ArgumentParser(prog='makebids.py')
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
