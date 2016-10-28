@@ -176,12 +176,8 @@ def main():
             sys.exit(2)
 
     defstr = ' (default %(default)s)'
-<<<<<<< HEAD
     parser = argparse.ArgumentParser(prog='makebids.py')
-=======
-    parser = argparse.ArgumentParser(prog='make_bids.py',
                                      description=__doc__)
->>>>>>> 016c1be4db4efdad0a706f38e7ad7cdc7d9da950
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
