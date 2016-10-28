@@ -12,6 +12,7 @@ from glob import glob
 import csv
 import sys
 import json
+import argparse
 
 from bids.grabbids import BIDSLayout
 
@@ -174,7 +175,6 @@ def main():
             self.print_help()
             sys.exit(2)
 
-    import argparse
     defstr = ' (default %(default)s)'
     parser = argparse.ArgumentParser(prog='make_bids.py',
                                      description=__doc__)
