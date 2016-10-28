@@ -12,6 +12,7 @@ from glob import glob
 import csv
 import sys
 import json
+import argparse
 
 from bids.grabbids import BIDSLayout
 
@@ -167,9 +168,20 @@ def choose(opts, target=None):
     return opts[choice-1]
 
 def main():
-    import argparse
+
+    class MyParser(argparse.ArgumentParser):
+        def error(self, message):
+            sys.stderr.write('error: %s\n' % message)
+            self.print_help()
+            sys.exit(2)
+
     defstr = ' (default %(default)s)'
+<<<<<<< HEAD
     parser = argparse.ArgumentParser(prog='makebids.py')
+=======
+    parser = argparse.ArgumentParser(prog='make_bids.py',
+                                     description=__doc__)
+>>>>>>> 016c1be4db4efdad0a706f38e7ad7cdc7d9da950
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
