@@ -12,6 +12,7 @@ from glob import glob
 import csv
 import sys
 import json
+import argparse
 
 from bids.grabbids import BIDSLayout
 
@@ -167,7 +168,13 @@ def choose(opts, target=None):
     return opts[choice-1]
 
 def main():
-    import argparse
+
+    class MyParser(argparse.ArgumentParser):
+        def error(self, message):
+            sys.stderr.write('error: %s\n' % message)
+            self.print_help()
+            sys.exit(2)
+
     defstr = ' (default %(default)s)'
     parser = argparse.ArgumentParser(prog='makebids.py',
                                      description=__doc__)
