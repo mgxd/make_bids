@@ -169,7 +169,8 @@ def choose(opts, target=None):
 def main():
     import argparse
     defstr = ' (default %(default)s)'
-    parser = argparse.ArgumentParser(prog='make_bids.py')
+    parser = argparse.ArgumentParser(prog='make_bids.py',
+                                     description=__doc__)
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
@@ -190,7 +191,7 @@ def main():
         sys.exit(-1)
 
     choice = int(raw_input('''
-Pick one option:
+Choose an option:
 1. Add sub prefix
 2. Remove underscore
 3. Make subject scan files
