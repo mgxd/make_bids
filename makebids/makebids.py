@@ -35,7 +35,7 @@ def add_metadata(infofile, add):
     meta = load_json(infofile)
     meta_info = dict(meta.items() + add.items())
     with open(infofile, 'wt') as fp:
-        json.dump(meta_info, fp, indent=1, sort_keys=True)
+        json.dump(meta_info, fp, indent=4, sort_keys=True)
     return infofile
 
 def add_sub(data_dir, subjpre, ses, no_test):
@@ -100,9 +100,11 @@ def add_taskname(bids_dir, taskname, no_test):
             prev = load_json(scan)
             comb = dict(prev.items() + {'TaskName': '%s'%taskname}.items())
             if no_test:
+                os.chmod(scan, '0o640')
                 with open(scan, 'wt') as fp:
                     json.dump(comb, fp, indent=0, sort_keys=True)
-
+                os.chmod(scan, '0o440')
+                    
 def fix_fieldmaps(bids_dir, no_test=False):
     layout = BIDSLayout(bids_dir)
     fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
@@ -128,12 +130,10 @@ def fix_fieldmaps(bids_dir, no_test=False):
         add = {'IntendedFor': rel_niftis,
                'TotalReadoutTime': readout}
         if no_test:
-            try:
-                add_metadata(fmap, add)
-            except IOError:
-                print('Unable to write to {} - change permissions ' \
-                      'and try again'.format(bn(fmap)))
-                sys.exit(-1)
+            # make writeable and then readonly
+            os.chmod(fmap, '0o640')
+            add_metadata(fmap, add)
+            os.chmod(fmap, '0o440')
         else:
             print('Adding:\n --- ' + '\n --- '.join(rel_niftis))
     return
