@@ -14,7 +14,6 @@ import sys
 import json
 import argparse
 import re
-from difflib import SequenceMatcher
 
 from bids.grabbids import BIDSLayout
 
@@ -112,24 +111,32 @@ def fix_fieldmaps(bids_dir, no_test=False):
         print('Fieldmap: ' + bn(fmap).split('.json')[0])
         subj = bn(fmap).split('_')[0]
         try:
-            dr = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+            pe = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
         except AttributeError: # dir or acq
-            dr = re.search('(?<=dir-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+            pe = re.search('(?<=dir-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+        except:
+            continue
+        # all niftis with that phase encoding
         niftis = [n.filename for n in layout.get(
             subject='%s'% subj.split('sub-')[-1],
-            extensions='.nii.gz') if dr in n.filename and 'fmap' not in n.filename]
+            extensions='.nii.gz') if pe in n.filename and 'fmap' not in n.filename]
+        # relative path within bids dataset
+        rel_niftis = [nif.split('{}/'.format(subj))[-1] for nif in niftis]
         # Add intended to all functionals
-        if 'func' in dr:
-            choice = [x.split('%s/'%subj)[-1] for x in niftis]
-        else:
-            choice = choose(niftis,fmap).split('%s/'%subj)[-1]
         readout = calc_readout(load_json(fmap))
         #return meta.keys()
-        add = {'IntendedFor': choice,
+        add = {'IntendedFor': rel_niftis,
                'TotalReadoutTime': readout}
         if no_test:
-            add_metadata(fmap, add)
-        return
+            try:
+                add_metadata(fmap, add)
+            except IOError:
+                print('Unable to write to {} - change permissions ' \
+                      'and try again'.format(bn(fmap)))
+                sys.exit(-1)
+        else:
+            print('Adding:\n --- ' + '\n --- '.join(rel_niftis))
+    return
 
 def calc_readout(meta):
     """Calculate readout time
@@ -141,36 +148,6 @@ def calc_readout(meta):
     readout - float"""
     return ((meta['global']['const']['AcquisitionMatrix'][0] - 1) \
             * meta['EffectiveEchoSpacing'])
-
-def choose(opts, target=None):
-    """Print out list and takes selection
-    Parameters
-    ----------
-    opts : list (of choices)
-    target : str (to compare)
-    Returns
-    ----------
-    choice: item"""
-    ratio = 0
-    match = None
-    if target:
-        for i, opt in enumerate(opts):
-            compare = lambda x,y: SequenceMatcher(None, x, y).ratio()
-            sim = compare(os.path.basename(opt), os.path.basename(target))
-            if sim > ratio:
-                ratio,match = sim,opt
-        print("Best match: %s\n"%(os.path.basename(match)))
-        return match
-        #if raw_input("Closest find:%s\n\n(y/n)" \
-        #             %os.path.basename(match)).lower() == 'y':
-        #    return match
-    for i, opt in enumerate(opts,1):
-        print(str(i)+') '+ os.path.basename(opt))
-    choice = int(raw_input('\nInput number\n'))
-    while choice > len(opts) or choice < 1:
-        print('Out of range')
-        choice = int(raw_input('\nInput number\n'))
-    return opts[choice-1]
 
 def main():
 
