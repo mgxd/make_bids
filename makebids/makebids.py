@@ -13,6 +13,8 @@ import csv
 import sys
 import json
 import argparse
+import re
+from difflib import SequenceMatcher
 
 from bids.grabbids import BIDSLayout
 
@@ -109,7 +111,10 @@ def fix_fieldmaps(bids_dir, no_test=False):
     for fmap in fmaps:
         print('Fieldmap: ' + bn(fmap).split('.json')[0])
         subj = bn(fmap).split('_')[0]
-        dr = search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+        try:
+            dr = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+        except AttributeError: # dir or acq
+            dr = re.search('(?<=dir-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
         niftis = [n.filename for n in layout.get(
             subject='%s'% subj.split('sub-')[-1],
             extensions='.nii.gz') if dr in n.filename and 'fmap' not in n.filename]
