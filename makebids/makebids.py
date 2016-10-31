@@ -176,7 +176,7 @@ def main():
             sys.exit(2)
 
     defstr = ' (default %(default)s)'
-    parser = argparse.ArgumentParser(prog='makebids.py')
+    parser = argparse.ArgumentParser(prog='makebids.py',
                                      description=__doc__)
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
@@ -198,7 +198,7 @@ def main():
         sys.exit(-1)
 
     choice = int(raw_input('''
-Pick one option:
+Choose an option:
 1. Add sub prefix
 2. Remove underscore
 3. Make subject scan files
