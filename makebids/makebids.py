@@ -100,10 +100,10 @@ def add_taskname(bids_dir, taskname, no_test):
             prev = load_json(scan)
             comb = dict(prev.items() + {'TaskName': '%s'%taskname}.items())
             if no_test:
-                os.chmod(scan, '0640')
+                os.chmod(scan, 0o640)
                 with open(scan, 'wt') as fp:
                     json.dump(comb, fp, indent=0, sort_keys=True)
-                os.chmod(scan, '0440')
+                os.chmod(scan, 0o440)
                     
 def fix_fieldmaps(bids_dir, no_test=False):
     layout = BIDSLayout(bids_dir)
@@ -132,9 +132,9 @@ def fix_fieldmaps(bids_dir, no_test=False):
                'TotalReadoutTime': readout}
         if no_test:
             # make writeable and then readonly
-            os.chmod(fmap, '0640')
+            os.chmod(fmap, 0o640)
             add_metadata(fmap, add)
-            os.chmod(fmap, '0440')
+            os.chmod(fmap, 0o440)
         else:
             print('Adding:\n --- ' + '\n --- '.join(rel_niftis))
     return
