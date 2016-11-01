@@ -120,8 +120,9 @@ def fix_fieldmaps(bids_dir, no_test=False):
             continue
         # all niftis with that phase encoding
         niftis = [n.filename for n in layout.get(
-            subject='%s'% subj.split('sub-')[-1],
-            extensions='.nii.gz') if pe in n.filename and 'fmap' not in n.filename]
+                  subject='%s'% subj.split('sub-')[-1], extensions='.nii.gz') 
+                  if pe in n.filename and 'fmap' not in n.filename 
+                  and 'derivatives' not in n.filename]
         # relative path within bids dataset
         rel_niftis = [nif.split('{}/'.format(subj))[-1] for nif in niftis]
         # Add intended to all functionals
