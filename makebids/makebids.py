@@ -15,7 +15,16 @@ import json
 import argparse
 import re
 
+import dicom
 from bids.grabbids import BIDSLayout
+
+OPTIONS = '''
+1. Add sub prefix
+2. Remove underscore
+3. Make subject scan files
+4. Add taskname to json
+5. Add IntendedFor / Readout
+'''
 
 def load_json(filename):
     with open(filename, 'r') as fp:
@@ -39,7 +48,9 @@ def add_metadata(infofile, add):
     return infofile
 
 def add_sub(data_dir, subjpre, ses, no_test):
-    subjs = [x for x in sorted(os.listdir(data_dir)) if subjpre in x and 'sub-' not in x]
+    """Add BIDS sub- prefix to subjects converted with heudiconv"""
+    subjs = sorted([x for x in os.listdir(data_dir) if subjpre in x 
+                                                and 'sub-' not in x])
     for subj in subjs:
         old = os.path.join(data_dir, subj)
         new = os.path.join(data_dir, 'sub-' + subj)
@@ -94,19 +105,18 @@ def write_scantsv(bids_dir, dicom_dir, pre, no_test):
             print('Wrote %s'%outname)
     print(date)
 
-def add_taskname(bids_dir, taskname, no_test):
+def add_taskname(bids_dir, taskname, live=False):
     for scan in glob(os.path.join(bids_dir, '*', '*', '*task*_bold.json')):
         if taskname in scan:
             prev = load_json(scan)
             comb = dict(prev.items() + {'TaskName': '%s'%taskname}.items())
-            if no_test:
+            if live:
                 os.chmod(scan, 0o640)
                 with open(scan, 'wt') as fp:
                     json.dump(comb, fp, indent=0, sort_keys=True)
                 os.chmod(scan, 0o440)
                     
-def fix_fieldmaps(bids_dir, no_test=False):
-    layout = BIDSLayout(bids_dir)
+def fix_fieldmaps(layout, live=False):
     fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
     bn = lambda x: os.path.basename(x)
     for fmap in fmaps:
@@ -130,7 +140,7 @@ def fix_fieldmaps(bids_dir, no_test=False):
         #return meta.keys()
         add = {'IntendedFor': rel_niftis,
                'TotalReadoutTime': readout}
-        if no_test:
+        if live:
             # make writeable and then readonly
             os.chmod(fmap, 0o640)
             add_metadata(fmap, add)
@@ -151,7 +161,7 @@ def calc_readout(meta):
             * meta['EffectiveEchoSpacing'])
 
 def main():
-
+    # to run in commandline
     class MyParser(argparse.ArgumentParser):
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
@@ -164,47 +174,45 @@ def main():
     parser.add_argument('datadir', help='''bids-like directory''')
     parser.add_argument('pre', type=str, help='''subject identifier (no numbers)''')
     parser.add_argument('--ses', type=int, dest='session')
-    parser.add_argument('-d', '--dicoms', type=str, help='''dicom directory''')
-    parser.add_argument('-t', '--taskname', type=str, help='''task name''')
-    parser.add_argument('--notest', action='store_true')
+    parser.add_argument('-d', '--dicoms', type=str, default=None, 
+                        help="""dicom directory""")
+    parser.add_argument('-t', '--taskname', type=str, help="""task name""")
+    parser.add_argument('--live', default=False, action='store_true',
+                        help="""WARNING: DON'T INCLUDE ON FIRST PASS""")
+    parser.add_argument('--full', action='store_true', default=False,
+                        help="""run through each option""")
     args = parser.parse_args()
+    bids_dir = os.path.abspath(args.datadir)
+    if not os.path.exists(bids_dir):
+        sys.exit('Specify valid BIDS data directory')
     if args.dicoms:
-        import dicom
         dicom_dir = os.path.abspath(args.dicoms)
-    no_test = args.notest
-    if no_test is None:
-        no_test = False
-
-    data_dir = os.path.abspath(args.datadir)
-    if not os.path.exists(data_dir):
-        print('Data directory not found')
-        sys.exit(-1)
-
-    choice = int(raw_input('''
-Choose an option:
-1. Add sub prefix
-2. Remove underscore
-3. Make subject scan files
-4. Add taskname to json
-5. Add IntendedFor / Readout
-'''))
-    if choice == 1:
-        add_sub(data_dir, args.pre, args.session, no_test)
-    elif choice == 2:
-        undscr = int(raw_input('''How many underscores in your subject?\n'''))
-        drop_underscore(data_dir, args.pre, no_test, undscr)
-    elif choice == 3:
-        if args.dicom_dir:
-            write_scantsv(data_dir, dicom_dir, args.pre, no_test)
-        else:
-            print('Specify dicom directory with [-d] flag')
-            sys.exit(-1)
-    elif choice == 4:
-        add_taskname(data_dir, args.taskname, no_test)
-    elif choice == 5:
-        fix_fieldmaps(data_dir, no_test)
     else:
-        sys.exit(-1)
+        dicom_dir = None
+
+    if args.full:
+        add_sub(bids_dir, args.pre, args.session, live)
+        drop_underscore(bids_dir, live)
+        # using BIDS grabbids after renaming files
+        layout = BIDSLayout(bids_dir)
+        write_scantsv(layout, dicom_dir, live)
+        add_taskname(layout, live)
+        fix_fieldmaps(layout, live)
+    else:
+        choice = int(raw_input(OPTIONS))
+        if choice == 1:
+            add_sub(data_dir, args.pre, args.session, live)
+        elif choice == 2:
+            undscr = int(raw_input('''How many underscores in your subject?\n'''))
+            drop_underscore(data_dir, args.pre, live, undscr)
+        elif choice == 3:
+            write_scantsv(data_dir, dicom_dir, args.pre, live)
+        elif choice == 4:
+            add_taskname(data_dir, args.taskname, no_test)
+        elif choice == 5:
+            fix_fieldmaps(data_dir, no_test)
+        else:
+            sys.exit('Option not recognized')
         
 if __name__ == '__main__':
     main()
