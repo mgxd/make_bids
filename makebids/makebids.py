@@ -47,44 +47,36 @@ def add_metadata(infofile, add):
         json.dump(meta_info, fp, indent=4, sort_keys=True)
     return infofile
 
-def add_sub(data_dir, subjpre, ses, no_test):
+def add_sub(data_dir, subjpre, live=False):
     """Add BIDS sub- prefix to subjects converted with heudiconv"""
     subjs = sorted([x for x in os.listdir(data_dir) if subjpre in x 
-                                                and 'sub-' not in x])
+                                            and 'sub-' not in x])
     for subj in subjs:
         old = os.path.join(data_dir, subj)
         new = os.path.join(data_dir, 'sub-' + subj)
-        print(old + ' will become ' + new)
-        if no_test:
+        if live:
             os.rename(old, new)
+        else:
+            print(msg.format(old, new))
 
-def drop_underscore(data_dir, subjpre, no_test, undscr=1, ses=None):
-    # initial directories
-    os.chdir(data_dir)
-    for _dir in os.listdir(data_dir) + os.listdir(os.path.join(data_dir,'sourcedata')):
-        if subjpre in _dir:
-            splt = _dir.split('_')
-            new = ''.join(splt[:(undscr+1)])
-            print("Changing " + os.path.abspath(_dir) + " to " + os.path.abspath(new))
-            if no_test:
-                os.rename(os.path.abspath(_dir),os.path.abspath(new))
-    #rest of files
-    try:
-        for dirs in glob(os.path.join(data_dir,'*','*')):
-            files = os.listdir(dirs)
-            for f in files:
-                if subjpre in f:
-                    os.chdir(dirs)
-                    splt = f.split('_')
-                    new = ''.join(splt[:(undscr+1)]) + '_' + '_'.join(splt[(undscr+1):])
-                    # no point in having files end with underscores
-                    if new[-1] == '_':
-                        new = new[:-1]
-                    print("Changing " + f + " to " + new)
-                    if no_test:
-                        os.rename(f,new)
-    except:
-        raise IOError('Sessions are not yet supported')
+def drop_underscore(data_dir, live=False):
+    """ Change directories first, then files """
+    subjs = sorted([x for x in os.listdir(data_dir) if x.startswith('sub-')])
+    for subj in subjs:
+        if subj.count('_') == 0:
+            continue
+        corr = subj.replace('_', '')
+        if live:
+            os.rename(op(data_dir, subj), op(data_dir, corr))
+        else:
+            print(msg.format(op(data_dir, subj), op(data_dir, corr)))
+            return
+        # refresh after each rename
+        layout = BIDSLayout(data_dir)
+        files = [f.filename for f in layout.get() if subj in f.filename]
+        for file in files:
+            fix = file.replace(subj, corr)
+            os.rename(file, fix)
                     
 def write_scantsv(bids_dir, dicom_dir, pre, no_test):
     subs = sorted([x[-3:] for x in os.listdir(bids_dir) if 'sub-' in x])
@@ -191,7 +183,7 @@ def main():
         dicom_dir = None
 
     if args.full:
-        add_sub(bids_dir, args.pre, args.session, live)
+        add_sub(bids_dir, args.pre, live)
         drop_underscore(bids_dir, live)
         # using BIDS grabbids after renaming files
         layout = BIDSLayout(bids_dir)
@@ -201,10 +193,9 @@ def main():
     else:
         choice = int(raw_input(OPTIONS))
         if choice == 1:
-            add_sub(data_dir, args.pre, args.session, live)
+            add_sub(data_dir, args.pre, live)
         elif choice == 2:
-            undscr = int(raw_input('''How many underscores in your subject?\n'''))
-            drop_underscore(data_dir, args.pre, live, undscr)
+            drop_underscore(data_dir, live)
         elif choice == 3:
             write_scantsv(data_dir, dicom_dir, args.pre, live)
         elif choice == 4:
