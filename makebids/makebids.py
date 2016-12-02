@@ -89,7 +89,8 @@ def drop_underscore(data_dir, live=False):
 def write_scantsv(bids_dir, dicom_dir=None, live=False):
     """ Can be improved with metadata """
     if not os.path.exists(dicom_dir):
-        sys.exit('Specify valid dicom directory')
+        print('Specify valid dicom directory to write scan.tsvs')
+        return
     layout = BIDSLayout(bids_dir)
     subs = sorted([x for x in layout.get_subjects()])
     for sid in subs:
