@@ -55,11 +55,13 @@ def add_metadata(infofile, add, ind=4):
 
 def add_sub(data_dir, subjpre, live=False):
     """Add BIDS sub- prefix to subjects converted with heudiconv"""
+    if not subjpre:
+        sys.exit('Specify subject prefix')
     subjs = sorted([x for x in os.listdir(data_dir) if subjpre in x 
                                             and 'sub-' not in x])
     for subj in subjs:
-        old = os.path.join(data_dir, subj)
-        new = os.path.join(data_dir, 'sub-' + subj)
+        old = op(data_dir, subj)
+        new = op(data_dir, 'sub-' + subj)
         if live:
             os.rename(old, new)
         else:
