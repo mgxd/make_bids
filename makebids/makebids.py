@@ -28,6 +28,8 @@ OPTIONS = '''
 5. Add IntendedFor / Readout
 '''
 
+msg = '{0} will become {1}'
+
 def load_json(filename):
 	""" easy load of json dict """
 	with open(filename, 'r') as fp:
