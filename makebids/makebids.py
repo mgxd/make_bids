@@ -29,10 +29,10 @@ OPTIONS = '''
 '''
 
 def load_json(filename):
-	""" easy load of json dict """
-	with open(filename, 'r') as fp:
-		data = json.load(fp)
-	return data
+    """ easy load of json dict """
+    with open(filename, 'r') as fp:
+        data = json.load(fp)
+    return data
 
 def add_metadata(infofile, add, ind=4):
     """Adds dict items to exisiting json
@@ -198,8 +198,8 @@ def main():
         dicom_dir = None
 
     def refresh(bids_dir=bids_dir):
-	""" for when files are renamed """
-	return BIDSLayout(bids_dir)
+        """ for when files are renamed """
+        return BIDSLayout(bids_dir)
 
     if args.full:
         add_sub(bids_dir, args.pre, args.live)
