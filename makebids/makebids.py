@@ -187,7 +187,7 @@ def main():
                         help="""WARNING: DON'T INCLUDE ON FIRST PASS""")
     parser.add_argument('--full', action='store_true', default=False,
                         help="""Run through each option""")
-    parser.add_argument('--verbose', action='store_true', default=False,
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
                         help="""Make the python logger loud""")
     args = parser.parse_args()
     bids_dir = os.path.abspath(args.datadir)
@@ -197,12 +197,13 @@ def main():
         dicom_dir = os.path.abspath(args.dicoms)
     else:
         dicom_dir = None
+    
     if args.verbose:
         loglevel = logging.DEBUG
-	else:
+    else:
         loglevel = logging.WARNING
     # Set logging output
-	logging.basicConfig(filename=op(os.getcwd(), 'mb_out.txt'),
+	logging.basicConfig(filename=op(os.getcwd(), 'mbOUT.txt'),
                         format='%(asctime)s %(levelname)s:%(message)s',
 						level=loglevel)
     
