@@ -31,10 +31,10 @@ OPTIONS = '''
 msg = '{0} will become {1}'
 
 def load_json(filename):
-	""" easy load of json dict """
-	with open(filename, 'r') as fp:
-		data = json.load(fp)
-	return data
+    """ easy load of json dict """
+    with open(filename, 'r') as fp:
+        data = json.load(fp)
+    return data
 
 def add_metadata(infofile, add, ind=4):
     """Adds dict items to exisiting json
@@ -115,36 +115,36 @@ def write_scantsv(bids_dir, dicom_dir=None, live=False):
     print(date)
 
 def add_taskname(layout, live=False):
-	""" Add 'TaskName' key to meta info for each functional task """
-	tasks = layout.get_tasks()
-	for task in tasks:
-		fls = [f.filename for f in layout.get(task=task, ext='.json')]
-		for meta in fls:
-				add = {'TaskName': task}
-				if live:
-					# add to metadata
-					add_metadata(meta, add)
-	return layout
+    """ Add 'TaskName' key to meta info for each functional task """
+    tasks = layout.get_tasks()
+    for task in tasks:
+        fls = [f.filename for f in layout.get(task=task, ext='.json')]
+        for meta in fls:
+            add = {'TaskName': task}
+            if live:
+                # add to metadata
+                add_metadata(meta, add)
+    return layout
                     
 def fix_fieldmaps(layout, live=False):
-	""" Add 'IntendedFor' and 'TotalReadoutTime' keys to meta info
-	for each fieldmap -- IN TESTING """
-	fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
-	bn = lambda x: os.path.basename(x)
-	for fmap in fmaps:
-		print('Fieldmap: ' + bn(fmap).split('.json')[0])
-		subj = bn(fmap).split('_')[0]
-		try:
-			pe = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
-		except AttributeError: # dir or acq
-			pe = re.search('(?<=dir-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
-		except:
-			continue
-		# all niftis with that phase encoding
-		niftis = [n.filename for n in layout.get(
-				  subject='%s'% subj.split('sub-')[-1], extensions='.nii.gz') 
-				  if pe in n.filename and 'fmap' not in n.filename 
-				  and 'derivatives' not in n.filename]
+    """ Add 'IntendedFor' and 'TotalReadoutTime' keys to meta info
+    for each fieldmap -- IN TESTING """
+    fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
+    bn = lambda x: os.path.basename(x)
+    for fmap in fmaps:
+        print('Fieldmap: ' + bn(fmap).split('.json')[0])
+        subj = bn(fmap).split('_')[0]
+        try:
+            pe = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+        except AttributeError: # dir or acq
+            pe = re.search('(?<=dir-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
+        except:
+            continue
+        # all niftis with that phase encoding
+        niftis = [n.filename for n in layout.get(
+                  subject='%s'% subj.split('sub-')[-1], extensions='.nii.gz') 
+                  if pe in n.filename and 'fmap' not in n.filename 
+                  and 'derivatives' not in n.filename]
         # relative path within bids dataset
         rel_niftis = [nif.split('{0}{1}'.format(subj,os.sep))[-1] for nif in niftis]
         # Add intended to all functionals
@@ -157,7 +157,7 @@ def fix_fieldmaps(layout, live=False):
             add_metadata(fmap, add)
         else:
             print('Adding:\n --- ' + '\n --- '.join(rel_niftis))
-	return
+    return
 
 def calc_readout(meta):
     """Calculate readout time from metadata
@@ -200,8 +200,8 @@ def main():
         dicom_dir = None
 
     def refresh(bids_dir=bids_dir):
-	""" for when files are renamed """
-	return BIDSLayout(bids_dir)
+        """ for when files are renamed """
+        return BIDSLayout(bids_dir)
 
     if args.full:
         add_sub(bids_dir, args.pre, args.live)
