@@ -197,15 +197,15 @@ def main():
         dicom_dir = os.path.abspath(args.dicoms)
     else:
         dicom_dir = None
-    
+
     if args.verbose:
-        loglevel = logging.DEBUG
+        loglevel = logging.INFO
     else:
         loglevel = logging.WARNING
     # Set logging output
-	logging.basicConfig(filename=op(os.getcwd(), 'mbOUT.txt'),
+    logging.basicConfig(filename=op(os.getcwd(), 'mbOUT.txt'),
                         format='%(asctime)s %(levelname)s:%(message)s',
-						level=loglevel)
+                        level=loglevel)
     
     def refresh(bids_dir=bids_dir):
         """ for when files are renamed """
