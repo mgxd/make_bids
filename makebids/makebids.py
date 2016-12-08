@@ -96,7 +96,7 @@ def write_scantsv(bids_dir, dicom_dir=None, live=False):
     for sid in subs:
         dcm = read_file(glob(op(dicom_dir, '*' + sid, '*'))[-1], force=True).AcquisitionDate
         date = '-'.join([dcm[:4],dcm[4:6],dcm[6:]])
-        logging.info("{0}'s scan date: {1}").format(sid, date)
+        logging.info("{0}'s scan date: {1}".format(sid, date))
         scans = []
         for scan in [f.filename for f in layout.get(subject=sid,
                                         extensions=['nii','nii.gz'])]:
@@ -118,7 +118,7 @@ def add_taskname(layout, live=False):
         fls = [f.filename for f in layout.get(task=task, ext='.json')]
         for meta in fls:
             add = {'TaskName': task}
-            logging.info('Adding {0} to {1}').format(task, meta)
+            logging.info('Adding {0} to {1}'.format(task, meta))
             if live:
                 # add to metadata
                 add_metadata(meta, add)
