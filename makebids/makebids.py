@@ -14,9 +14,9 @@ import csv
 import sys
 import json
 import argparse
-
 import logging
 import re
+
 import dicom
 from bids.grabbids import BIDSLayout
 
@@ -64,10 +64,9 @@ def add_sub(data_dir, subjpre, live=False):
     for subj in subjs:
         old = op(data_dir, subj)
         new = op(data_dir, 'sub-' + subj)
+        logging.info(msg.format(old, new))
         if live:
             os.rename(old, new)
-        else:
-            print(msg.format(old, new))
 
 def drop_underscore(data_dir, live=False):
     """ Change directories first, then files """
@@ -76,11 +75,10 @@ def drop_underscore(data_dir, live=False):
         if subj.count('_') == 0:
             continue
         corr = subj.replace('_', '')
-        if live:
-            os.rename(op(data_dir, subj), op(data_dir, corr))
-        else:
-            print(msg.format(op(data_dir, subj), op(data_dir, corr)))
+        logging.info(msg.format(op(data_dir, subj), op(data_dir, corr)))
+        if not live:
             return
+        os.rename(op(data_dir, subj), op(data_dir, corr))
         # refresh after each rename
         layout = BIDSLayout(data_dir)
         files = [f.filename for f in layout.get() if subj in f.filename]
@@ -91,17 +89,17 @@ def drop_underscore(data_dir, live=False):
 def write_scantsv(bids_dir, dicom_dir=None, live=False):
     """ Can be improved with metadata """
     if not os.path.exists(dicom_dir):
-        print('Specify valid dicom directory to write scan.tsvs')
+        logging.warning('Specify valid dicom directory to write scan.tsvs')
         return
     layout = BIDSLayout(bids_dir)
     subs = sorted([x for x in layout.get_subjects()])
     for sid in subs:
         dcm = read_file(glob(op(dicom_dir, '*' + sid, '*'))[-1], force=True).AcquisitionDate
         date = '-'.join([dcm[:4],dcm[4:6],dcm[6:]])
+        logging.info("{0}'s scan date: {1}").format(sid, date)
         scans = []
-        for scan in [f.filename for f in 
-                     layout.get(subject=sid,
-                     extensions=['nii','nii.gz'])]:
+        for scan in [f.filename for f in layout.get(subject=sid,
+                                        extensions=['nii','nii.gz'])]:
             paths = scan.split(os.sep)
             scans.append(os.sep.join(paths[-2:]))
             outname = op(bids_dir, paths[-3], paths[-3] + '_scans.tsv')
@@ -111,8 +109,7 @@ def write_scantsv(bids_dir, dicom_dir=None, live=False):
                 writer.writerow(['filename', 'acq_time'])
                 for scan in sorted(scans):
                     writer.writerow([scan, date])
-            print('Wrote {0}'.format(outname))
-    print(date)
+            logging.info('Wrote {0}'.format(outname))
 
 def add_taskname(layout, live=False):
     """ Add 'TaskName' key to meta info for each functional task """
@@ -121,6 +118,7 @@ def add_taskname(layout, live=False):
         fls = [f.filename for f in layout.get(task=task, ext='.json')]
         for meta in fls:
             add = {'TaskName': task}
+            logging.info('Adding {0} to {1}').format(task, meta)
             if live:
                 # add to metadata
                 add_metadata(meta, add)
@@ -132,7 +130,7 @@ def fix_fieldmaps(layout, live=False):
     fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
     bn = lambda x: os.path.basename(x)
     for fmap in fmaps:
-        print('Fieldmap: ' + bn(fmap).split('.json')[0])
+        logging.info('Fieldmap: ' + bn(fmap).split('.json')[0])
         subj = bn(fmap).split('_')[0]
         try:
             pe = re.search('(?<=acq-)\w+', os.path.basename(fmap).replace('_', ' ')).group(0)
@@ -152,11 +150,10 @@ def fix_fieldmaps(layout, live=False):
         #return meta.keys()
         add = {'IntendedFor': rel_niftis,
                'TotalReadoutTime': readout}
+        logging.info('Adding:\n --- ' + '\n --- '.join(rel_niftis))
         if live:
             # add to metadata
             add_metadata(fmap, add)
-        else:
-            print('Adding:\n --- ' + '\n --- '.join(rel_niftis))
     return
 
 def calc_readout(meta):
@@ -189,7 +186,9 @@ def main():
     parser.add_argument('--live', default=False, action='store_true',
                         help="""WARNING: DON'T INCLUDE ON FIRST PASS""")
     parser.add_argument('--full', action='store_true', default=False,
-                        help="""run through each option""")
+                        help="""Run through each option""")
+    parser.add_argument('-v', '--verbose', action='store_true', default=False,
+                        help="""Make the python logger loud""")
     args = parser.parse_args()
     bids_dir = os.path.abspath(args.datadir)
     if not os.path.exists(bids_dir):
@@ -199,6 +198,15 @@ def main():
     else:
         dicom_dir = None
 
+    if args.verbose:
+        loglevel = logging.INFO
+    else:
+        loglevel = logging.WARNING
+    # Set logging output
+    logging.basicConfig(filename=op(os.getcwd(), 'mbOUT.txt'),
+                        format='%(asctime)s %(levelname)s:%(message)s',
+                        level=loglevel)
+    
     def refresh(bids_dir=bids_dir):
         """ for when files are renamed """
         return BIDSLayout(bids_dir)
@@ -210,9 +218,8 @@ def main():
         if dicom_dir:
         	write_scantsv(bids_dir, dicom_dir, args.live)
         # set layout once no more file renamings
-        layout = refresh()
-        add_taskname(layout, args.live)
-        fix_fieldmaps(layout, args.live)
+        add_taskname(refresh(), args.live)
+        fix_fieldmaps(refresh(), args.live)
     else:
         choice = int(raw_input(OPTIONS))
         if choice == 1:
