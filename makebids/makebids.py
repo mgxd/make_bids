@@ -20,16 +20,6 @@ import re
 import dicom
 from bids.grabbids import BIDSLayout
 
-OPTIONS = '''
-1. Add sub prefix
-2. Remove underscore
-3. Make subject scan files
-4. Add taskname to json
-5. Add IntendedFor / Readout
-'''
-
-msg = '{0} will become {1}'
-
 def load_json(filename):
     """ easy load of json dict """
     with open(filename, 'r') as fp:
@@ -58,7 +48,7 @@ def add_metadata(infofile, add, ind=4):
 def add_sub(data_dir, subjpre, live=False):
     """Add BIDS sub- prefix to subjects converted with heudiconv"""
     if not subjpre:
-        sys.exit('Specify subject prefix')
+        sys.exit('Specify subject prefix with [-p] flag')
     subjs = sorted([x for x in os.listdir(data_dir) if subjpre in x 
                                             and 'sub-' not in x])
     for subj in subjs:
@@ -69,7 +59,8 @@ def add_sub(data_dir, subjpre, live=False):
             os.rename(old, new)
 
 def drop_underscore(data_dir, live=False):
-    """ Change directories first, then files """
+    """Remove underscore from subject id"""
+    # Change directories first, then files
     subjs = sorted([x for x in os.listdir(data_dir) if x.startswith('sub-')])
     for subj in subjs:
         if subj.count('_') == 0:
@@ -87,9 +78,10 @@ def drop_underscore(data_dir, live=False):
             os.rename(file, fix)
                     
 def write_scantsv(bids_dir, dicom_dir=None, live=False):
-    """ Can be improved with metadata """
+    """Make subject scan files (needed for NDA submission)"""
+    # TODO: improved with metadata
     if not os.path.exists(dicom_dir):
-        logging.warning('Specify valid dicom directory to write scan.tsvs')
+        logging.warning('Specify valid dicom directory with [-d] flag')
         return
     layout = BIDSLayout(bids_dir)
     subs = sorted([x for x in layout.get_subjects()])
@@ -112,7 +104,7 @@ def write_scantsv(bids_dir, dicom_dir=None, live=False):
             logging.info('Wrote {0}'.format(outname))
 
 def add_taskname(layout, live=False):
-    """ Add 'TaskName' key to meta info for each functional task """
+    """Add 'TaskName' key to functional task metadata"""
     tasks = layout.get_tasks()
     for task in tasks:
         fls = [f.filename for f in layout.get(task=task, ext='.json')]
@@ -125,8 +117,7 @@ def add_taskname(layout, live=False):
     return layout
                     
 def fix_fieldmaps(layout, live=False):
-    """ Add 'IntendedFor' and 'TotalReadoutTime' keys to meta info
-    for each fieldmap -- IN TESTING """
+    """Add 'IntendedFor' and 'TotalReadoutTime' to fieldmap metadata"""
     fmaps = [f.filename for f in layout.get(ext='.json', type='epi')]
     bn = lambda x: os.path.basename(x)
     for fmap in fmaps:
@@ -167,9 +158,23 @@ def calc_readout(meta):
     return ((meta['dcmmeta_shape'][0] - 1) \
             * meta['EffectiveEchoSpacing'])
 
+OPTIONS = '''
+1. {0}
+2. {1}
+3. {2}
+4. {3}
+5. {4}
+'''.format(add_sub.__doc__,
+		   drop_underscore.__doc__,
+		   write_scantsv.__doc__,
+		   add_taskname.__doc__,
+		   fix_fieldmaps.__doc__)
+
+msg = '{0} will become {1}'
+
 def main():
-    # to run in commandline
     class MyParser(argparse.ArgumentParser):
+    	# to run from commandline
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
             self.print_help()
@@ -187,8 +192,8 @@ def main():
                         help="""WARNING: DON'T INCLUDE ON FIRST PASS""")
     parser.add_argument('--full', action='store_true', default=False,
                         help="""Run through each option""")
-    parser.add_argument('-v', '--verbose', action='store_true', default=False,
-                        help="""Make the python logger loud""")
+    parser.add_argument('-v', '--quiet', action='store_true', default=False,
+                        help="""Make the python logger only log errors""")
     args = parser.parse_args()
     bids_dir = os.path.abspath(args.datadir)
     if not os.path.exists(bids_dir):
@@ -198,18 +203,21 @@ def main():
     else:
         dicom_dir = None
 
-    if args.verbose:
-        loglevel = logging.INFO
-    else:
+    loglevel = logging.INFO
+    if args.quiet:
         loglevel = logging.WARNING
+
     # Set logging output
     logging.basicConfig(filename=op(os.getcwd(), 'mbOUT.txt'),
                         format='%(asctime)s %(levelname)s:%(message)s',
                         level=loglevel)
     
-    def refresh(bids_dir=bids_dir):
-        """ for when files are renamed """
-        return BIDSLayout(bids_dir)
+    # when files are renamed
+    refresh = lambda x=bids_dir: BIDSLayout(x)
+    #REMOVE IF WORKS
+    #def refresh(bids_dir=bids_dir):
+    #    """ for when files are renamed """
+    #    return BIDSLayout(bids_dir)
 
     if args.full:
         add_sub(bids_dir, args.pre, args.live)
