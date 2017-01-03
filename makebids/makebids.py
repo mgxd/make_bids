@@ -214,10 +214,6 @@ def main():
     
     # when files are renamed
     refresh = lambda x=bids_dir: BIDSLayout(x)
-    #REMOVE IF WORKS
-    #def refresh(bids_dir=bids_dir):
-    #    """ for when files are renamed """
-    #    return BIDSLayout(bids_dir)
 
     if args.full:
         add_sub(bids_dir, args.pre, args.live)
