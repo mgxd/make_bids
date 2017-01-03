@@ -192,7 +192,7 @@ def main():
                         help="""WARNING: DON'T INCLUDE ON FIRST PASS""")
     parser.add_argument('--full', action='store_true', default=False,
                         help="""Run through each option""")
-    parser.add_argument('-v', '--quiet', action='store_true', default=False,
+    parser.add_argument('-q', '--quiet', action='store_true', default=False,
                         help="""Make the python logger only log errors""")
     args = parser.parse_args()
     bids_dir = os.path.abspath(args.datadir)
