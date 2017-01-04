@@ -1,7 +1,6 @@
 #makebids
 
-.. image:: https://circleci.com/gh/mgxd/makebids/tree/master.svg?style=svg
-  :target: https://circleci.com/gh/mgxd/makebids/tree/master
+[![CircleCI](https://circleci.com/gh/mgxd/makebids/tree/master.svg?style=svg)](https://circleci.com/gh/mgxd/makebids/tree/master)
   
 Facilitate transition into [BIDS](http://bids.neuroimaging.io) data structure
 
