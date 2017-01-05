@@ -57,6 +57,7 @@ def add_sub(data_dir, subjpre, live=False):
         logging.info(msg.format(old, new))
         if live:
             os.rename(old, new)
+    return new
 
 def drop_underscore(data_dir, live=False):
     """Remove underscore from subject id"""
