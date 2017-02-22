@@ -9,4 +9,4 @@ def test_add_sub():
 	# return last subject
 	last = add_sub(join(DATASETS, 'ds1'), '0', 
 		           live=False).split(os.sep)[-1]
-	assert last == 'sub-04'
+	assert last[-1] == 'sub-04'
