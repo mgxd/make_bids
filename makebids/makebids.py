@@ -16,6 +16,7 @@ import json
 import argparse
 import logging
 import re
+from six.moves import input
 
 import dicom
 from bids.grabbids import BIDSLayout
@@ -226,7 +227,7 @@ def main():
         add_taskname(refresh(), args.live)
         fix_fieldmaps(refresh(), args.live)
     else:
-        choice = int(raw_input(OPTIONS))
+        choice = int(input(OPTIONS))
         if choice == 1:
             add_sub(bids_dir, args.pre, args.live)
         elif choice == 2:
